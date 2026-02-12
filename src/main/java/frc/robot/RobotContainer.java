@@ -9,7 +9,6 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathPlannerPath;
-
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -28,20 +27,6 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.ArmCommands.ArmBounce;
-import frc.robot.commands.ArmCommands.ArmLeft;
-import frc.robot.commands.ArmCommands.ArmRight;
-import frc.robot.commands.ArmCommands.ArmSetpoint;
-import frc.robot.commands.ArmCommands.ArmStop;
-import frc.robot.commands.ArmCommands.ArmTest;
-import frc.robot.commands.ElevatorCommands.ElevatorDown;
-import frc.robot.commands.ElevatorCommands.ElevatorLevel2;
-import frc.robot.commands.ElevatorCommands.ElevatorSetpoint;
-import frc.robot.commands.ElevatorCommands.ElevatorUp;
-import frc.robot.commands.GripperCommands.GripperClose;
-import frc.robot.commands.GripperCommands.GripperOpen;
-import frc.robot.subsystems.Arm.Arm;
-import frc.robot.subsystems.Elevator.Elevator;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import swervelib.SwerveInputStream;
 
@@ -53,12 +38,6 @@ import java.io.File;
  */
 public class RobotContainer
 { 
-  private final Arm arm = new Arm ();
-  private final ArmLeft armleft = new ArmLeft(arm);
-  private final ArmRight armright = new ArmRight(arm);
-
-   private Elevator elevator = new Elevator(); 
-
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   final         CommandXboxController driverXbox = new CommandXboxController(0);
@@ -72,7 +51,7 @@ public class RobotContainer
    */
   SwerveInputStream driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
                                                                 () -> driverXbox.getLeftY() * -1,
-                                                                () -> driverXbox.getLeftX())
+                                                                () -> driverXbox.getLeftX() * -1)
                                                             .withControllerRotationAxis(driverXbox::getRightX)
                                                             .deadband(OperatorConstants.DEADBAND)
                                                             .scaleTranslation(0.4)
@@ -132,8 +111,8 @@ public class RobotContainer
     DriverStation.silenceJoystickConnectionWarning(true);
     NamedCommands.registerCommand("test", Commands.print("I EXIST"));
 
-    
-  }
+
+  } 
 
   /**
    * Use this method to define your trigger->command mappings. Triggers can be created via the
@@ -210,14 +189,7 @@ public class RobotContainer
       driverXbox.rightBumper().onTrue(Commands.none());
     }
     driverXbox.start().onTrue(new InstantCommand(() -> drivebase.zeroGyro()));
-
-    
-    opXbox.leftBumper().whileTrue(armleft);
-    opXbox.rightBumper().whileTrue(armright);
-    opXbox.rightTrigger().whileTrue(new ElevatorUp(elevator, () -> opXbox.getRightTriggerAxis()));
-    opXbox.leftTrigger().whileTrue(new ElevatorDown(elevator, () -> opXbox.getLeftTriggerAxis()));
-    // opXbox.x().onTrue(new GripperClose(arm));
-    // opXbox.b().onTrue(new GripperOpen(arm));
+  
 
     // opXbox.povUp().whileTrue(new ElevatorSetpoint(elevator, 20).alongWith(new ArmSetpoint(arm, 10))).onFalse(new GripperOpen(arm));
 
@@ -236,15 +208,27 @@ public class RobotContainer
   public Command getAutonomousCommand()
   {
   try{
-        PathPlannerPath path2 = PathPlannerPath.fromPathFile("dih");
-        PathPlannerPath path = PathPlannerPath.fromPathFile("Straight");
-        System.out.println(path.name);
+
+        //PathPlannerPath path = PathPlannerPath.fromPathFile("path1");
+       // PathPlannerPath onemeterLeft = PathPlannerPath.fromPathFile("1mLeft");
+       // PathPlannerPath twomFoward = PathPlannerPath.fromPathFile("2mFoward");
+       // PathPlannerPath full = PathPlannerPath.fromPathFile("fullPath");
+
+
         // Create a path following command using AutoBuilder. This will also trigger event markers.
         return new SequentialCommandGroup(
           new InstantCommand(() -> drivebase.resetOdometry(new Pose2d())),
-          AutoBuilder.followPath(path),
-          new ParallelCommandGroup(new ArmSetpoint(arm, 20), AutoBuilder.followPath(path2))
+          //AutoBuilder.followPath(threeMeters)
+
+          // AutoBuilder.followPath(path)
+         AutoBuilder.buildAuto("FullPath")
+          // AutoBuilder.followPath(twomFoward),
+          // AutoBuilder.followPath(onemeterLeft),
+          // AutoBuilder.followPath(onemeterFoward)
           );
+
+
+
     } catch (Exception e) {
         DriverStation.reportError("Big oops: " + e.getMessage(), e.getStackTrace());
         return Commands.none();
